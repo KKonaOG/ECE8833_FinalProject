@@ -19,12 +19,6 @@ networkNeurons = rand(activeNeurons, 2);
 
 %% "Train" the Network
 for i = 1:iterations
-    if (~mod(i, 1000))
-        fprintf("Iteration %d of %d\n", i, iterations);
-        % fprintf("Learning Rate: %f\n", learning_rate);
-        % fprintf("Active Neurons: %f\n", activeNeurons);
-    end
-
      % Sample a Random Waypoint
      waypoint = map_waypoints_normalized(randperm(height(map_waypoints_normalized), 1), :);
 
@@ -75,23 +69,20 @@ for i = 1:iterations
 
      % Decay Learning Parameters
      learning_rate = learning_rate * 0.99997;
-     activeNeurons = activeNeurons * 0.99997;
+     activeNeurons = activeNeurons * 0.9997;
 
      % If the radius (or amount of activeNeurons) has completely decayed we
      % can go ahead and exit out as we can no longer learn.
      if (activeNeurons < 1)
-         printf("Trainable Neurons has completely decayed, finalizing execution.");
          break;
      end
 
      % If the learning rate has completely decayed we can go ahead and exit out as we can no longer learn.
      if (learning_rate < 0.001)
-         printf("Learning rate has completely decayed, finalizing execution.");
          break;
      end
     
 end
-fprintf("Completed %d iterations.", iterations);
 
 
  % Build the route, we only want the "best" neurons. Imagine this as
@@ -103,7 +94,7 @@ fprintf("Completed %d iterations.", iterations);
  % neuron
 optimalRoute = [];
 for i = 1:height(map_waypoints_normalized)
-    [bestRoutePoint, bestRouteDistance] = GetClosestPoint(map_waypoints_normalized(i,:), networkNeurons);
+    [bestRoutePoint, ~] = GetClosestPoint(map_waypoints_normalized(i,:), networkNeurons);
     optimalRoute = [optimalRoute; [i bestRoutePoint]];
 end
 optimalRoute = sortrows(optimalRoute, 2);
@@ -116,6 +107,6 @@ for i = 1:height(optimalRoute)-1
    routeDistance = routeDistance + distance;
 end
 
-network = networkNeurons*16;
+network = networkNeurons*map_size;
 end
 
