@@ -77,7 +77,7 @@ function [network, optimalRoute, routeDistance] = self_organizing_map(map_waypoi
 % <p>Waypoints are normalized based off the map size (i.e, the bounds of the
 %     waypoints will not exceed 0..1). Alternative methods are available, such
 %     as making the greatest waypoint coordinate mark as 1.</p>
-map_waypoints_normalized = map_waypoints/map_size;
+map_waypoints_normalized = map_waypoints;
 
 % <h2>Stage 2: Generate the Initial Network</h2>
 
@@ -86,10 +86,19 @@ map_waypoints_normalized = map_waypoints/map_size;
 activeNeurons = height(map_waypoints_normalized) * 8;
 networkNeurons = rand(activeNeurons, 2);
 
+% In order to early terminate for dwindling improvements, a relationship must be 
+% made between the closest neuron to a waypoint and its distance. This in
+% effect should cause the program to terminate when the rate of improvement
+% begins to dwindle.
+error_array = zeros(height(map_waypoints_normalized), 2);
+error_array(:, 2) = map_size*map_size;
 % <h2>Stage 3: Train the Network</h2>
 for i = 1:iterations
-     % <h3>Stage 3a: Sample a Random Waypoint</h3>
-     waypoint = map_waypoints_normalized(randperm(height(map_waypoints_normalized), 1), :);
+     error_array(:, 1) = error_array(:, 2);
+
+     % Sample In Waypoint Order
+     waypoint_index = mod(i-1, height(map_waypoints_normalized)) + 1;
+     waypoint = map_waypoints_normalized(waypoint_index, :);
 
      % <h3>Stage 3b: Find Closest ("Winning") Neuron</h3>
      % <p>Its index and value are saved to be used in the gaussian calculation,
@@ -144,7 +153,7 @@ for i = 1:iterations
      % <h3>Stage 3d: Decay Learning Parameters</h3>
      learning_rate = learning_rate * 0.99997;
      activeNeurons = activeNeurons * 0.9997;
-
+    
      % <p>If the radius (or amount of activeNeurons) has completely decayed we
      %     can go ahead and exit out as we can no longer learn.</p>
      if (activeNeurons < 1)
@@ -156,7 +165,11 @@ for i = 1:iterations
      if (learning_rate < 0.001)
          break;
      end
-    
+
+     error_array(waypoint_index, 2) = pdist([waypoint; networkNeurons(closestNeuron_Index, :)]);
+     if (((mean(error_array(:,1) - mean(error_array(:, 2)))) < 0.001) && mean(error_array(:, 2) < 0.001))
+        break;
+     end
 end
 
 
@@ -188,6 +201,6 @@ for i = 1:height(optimalRoute)-1
    routeDistance = routeDistance + distance;
 end
 
-network = networkNeurons*map_size;
+network = networkNeurons;
 end
 

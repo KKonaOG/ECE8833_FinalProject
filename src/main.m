@@ -1,3 +1,6 @@
+clc
+clear all
+close all
 % <h1>Main.m</h1>
 % <p>Main.m is responsible for handling the code-flow for the entire simulation.
 %     This process is broken down into stages where each stage, more or less,
@@ -14,7 +17,7 @@
 %     remaining stages.</p>
 % <p>&nbsp;</p>
 %% Initialize by running a map (this plots obstacles and waypoints)
-run("Maps/Map1.m");
+run("Maps/Map2.m");
 
 % <h2><a id="Stage2"></a>&nbsp;Stage 2a: <a
 %         href="../README.cchtml#h_907645437334861681190082514">Determine
@@ -62,6 +65,110 @@ end
 solution_time = solution_time + toc;
 disp("Solved TSP in " + solution_time + " seconds");
 
+%% Digital Twin - Waypoint Priority Override
+doPriorityOverride = false;
+
+ % This is only here due to simulation
+currentWaypoint = [1 15];
+priorityWaypoint = [15 1];
+priorityRoute = zeros(height(optimal_route), 1);
+if (doPriorityOverride)
+    % The user has indicated they would like a specific translation on two
+    % waypoints. They should be specified as the actual waypoint
+    % coordinates as we do not want to rely on the "current" ordering. As
+    % this is simulated and we do not have access to the internal VFH model
+    % for Dr. Luo we will "simulate" waypoint selection and the robots
+    % currently active position. That is, we will force a "re-wire" at a
+    % "current position" to go towards the "priority" waypoint. Current
+    % Position will be encoded as a random point along the translation line
+    % between two waypoints to simulate robot current position.
+
+    % We want to identify the TSP's identified next waypoint so we can
+    % calculate a pseudo-position for the robot. This makes are simulation
+    % slightly more realistic
+    
+    % Get Map Waypoint Index (ID)
+    waypoint_curr_id = find(ismember(map_waypoints, currentWaypoint,'rows'));
+
+    % Get Map Waypoint Location in SOM-route
+    waypoint_route_index = find(optimal_route == waypoint_curr_id, 1);
+
+    % Determine already travelled waypoints
+    priorityRoute(1:waypoint_route_index) = optimal_route(1:waypoint_route_index);
+    route_to_travel = optimal_route(waypoint_route_index+1:end);
+    
+    % We now circumvent SOM-ordering by merging the next-waypoint into the
+    % next position of route_traveled.
+
+    % Get Map Waypoint Index (ID)
+    waypoint_prio_id = find(ismember(map_waypoints, priorityWaypoint,'rows'));
+    waypoint_prio_route_index = find(optimal_route == waypoint_prio_id, 1);
+
+    isNeeded = true;
+    if (waypoint_prio_route_index < waypoint_route_index)
+        disp("Priority Override not needed")
+        doPriorityOverride = false;
+        isNeeded = false;
+    end
+
+    if (isNeeded)
+        mapPrio = figure;
+        title(map_title + " - Priority Waypoint")
+        axis ([0 map_size 0 map_size]);
+        yticks(0:1:map_size);
+        xticks(0:1:map_size);
+        axis square;
+        hold on;
+        plot(map_waypoints(:,1), map_waypoints(:,2), "o");
+        plot(map_obstacles, "FaceColor", "k", "FaceAlpha",1);
+        % plot(obstacle_buffers);
+
+        % Add Priority Waypoint next in line in priorityRoute
+        priorityRoute(waypoint_route_index + 1) = waypoint_prio_id;
+    
+        % Re-calculate Route-To-Travel (we must first map the ids back to
+        % their actual waypoints)
+        neededWaypoints = map_waypoints(route_to_travel, :);
+        neededWaypoints(end, :) = [];
+    
+        % We now have the order in which they should appear
+        [~, priority_optimal_route, ~] = self_organizing_map(neededWaypoints, map_size, 100000, 0.8);
+    
+        % Re-map priority_optimal_route back to neededWaypoints
+        neededWaypointsOrdered = neededWaypoints(priority_optimal_route, :);
+    
+        neededWaypointsOriginalReferences = [];
+        for i=1:height(neededWaypointsOrdered)
+            for j=1:height(map_waypoints)
+                if (map_waypoints(j, :) == neededWaypointsOrdered(i, :))
+                    neededWaypointsOriginalReferences(i) = j;
+                    break;
+                end
+            end
+        end
+    
+        shiftAmount = find(neededWaypointsOriginalReferences == waypoint_prio_id);
+        if (shiftAmount ~= 1)
+            neededWaypointsOriginalReferences = circshift(neededWaypointsOriginalReferences, 1-shiftAmount);
+        end
+    
+        priorityRoute(waypoint_route_index+1:end-1) = neededWaypointsOriginalReferences(1:end);
+        priorityRoute(end, :) = priorityRoute(1, :);
+    
+        for i=1:height(priorityRoute)
+            text(map_waypoints(priorityRoute(i), 1), map_waypoints(priorityRoute(i), 2), string(i));
+        end
+    end
+end
+
+%% Digital Twin - Obstacle Override
+doObstacleOverride = true;
+hiddenObstaclePoly = [5 4; 5 6; 6 6; 6 4;];
+if (doObstacleOverride)
+    digitalTwinObst = CreateObstacle(map_obstacles, [], hiddenObstaclePoly);
+    plot(digitalTwinObst, "FaceColor", "k", "FaceAlpha",1);
+end
+
 % <h2><a id="Stage3"></a>&nbsp;Stage 3: <a
 %         href="../README.cchtml#h_277825871586261681190638724">Find
 %         Point-To-Point Path for Each Waypoint in Order</a></h2>
@@ -102,17 +209,63 @@ disp("Solved TSP in " + solution_time + " seconds");
 % <p>&nbsp;</p>
 %% Find Navigation Solution via PTP Algorithm (Graft RRT)
 route_solutions = struct(); % This pre-allocates an array with the number of routes we will generate (number of waypoints in optimal route - 1)
+obstacle_route_solutions = struct();
 colors = hsv(height(optimal_route)-1);
 for i=1:height(optimal_route)-1
-    [route, route_calculation_time] = graft_rrtstar(map_waypoints(optimal_route(i), :), map_waypoints(optimal_route(i+1), :), map_size, obstacle_buffers, 2, 1, 10000);
-    color = colors(i, :);
-    for j=1:height(route)-1
-        line([route(j, 1), route(j+1, 1)], [route(j, 2), route(j+1, 2)], "Color", color);
-    end
+    [route, route_calculation_time] = graft_rrtstar(map_waypoints(optimal_route(i), :), map_waypoints(optimal_route(i+1), :), map_size, map_obstacles, 2, 1, 10000);
     solution_time = solution_time + route_calculation_time;
     route_solutions(i).data = route;
+    route_solutions(i).recalculated = false;
+
+    if (doObstacleOverride)
+        for j=1:height(route)-1
+            if (~ObstacleFree(route(j, 1:2), route(j+1, 1:2), map_size, digitalTwinObst))
+                [new_route, new_route_calculation_time] = graft_rrtstar(map_waypoints(optimal_route(i), :), map_waypoints(optimal_route(i+1), :), map_size, digitalTwinObst, 2, 1, 10000);
+                solution_time = solution_time + route_calculation_time;
+                obstacle_route_solutions(i).data = new_route;
+                route_solutions(i).recalculated = true;
+                break;
+            end
+        end
+    end
 end
+
+
+if (doPriorityOverride)
+    priority_route_solutions = struct();
+    for i=1:height(priorityRoute)-1
+        [prio_route, prio_route_calculation_time] = graft_rrtstar(map_waypoints(priorityRoute(i), :), map_waypoints(priorityRoute(i+1), :), map_size, map_obstacles, 2, 1, 10000);
+        solution_time = solution_time + prio_route_calculation_time;
+        priority_route_solutions(i).data = prio_route;
+    end
+end
+
+% Plot Navigation Solution
+for i=1:height(optimal_route)-1
+    if  (doPriorityOverride && i >= waypoint_route_index)
+        figure(mapPrio);
+        solutionPath = priority_route_solutions(i).data;
+        line(solutionPath(:, 1), solutionPath(:, 2), "Color", "k", "LineStyle", "--")
+    elseif (doPriorityOverride)
+        figure(mapPrio);
+        solutionPath = route_solutions(i).data;
+        line(solutionPath(:, 1), solutionPath(:, 2), "Color", "g", "LineStyle", "-")
+    end
+
+    figure(map)
+    solutionPath = route_solutions(i).data;
+    if (route_solutions(i).recalculated)
+        line(solutionPath(:, 1), solutionPath(:, 2), "Color", "r", "LineStyle", "-")
+        solutionPath = obstacle_route_solutions(i).data;
+        line(solutionPath(:, 1), solutionPath(:, 2), "Color", "g", "LineStyle", "--")
+        disp("Alterations");
+    else
+        line(solutionPath(:, 1), solutionPath(:, 2), "Color", "g", "LineStyle", "-")
+    end
+end
+
 disp("Produced Navigable Route in " + solution_time + " seconds")
+
 
 % <h2>Stage 4: <a href="../README.cchtml#h_330493934706951681190786455">Navigate
 %         along the Path while Localizing and Mapping Terrain</a></h2>

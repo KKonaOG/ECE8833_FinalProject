@@ -8,7 +8,7 @@ function [outObstacles, outBuffers] = CreateObstacle(inObstacles, inBuffers, inV
 newObstacle = polyshape(inVertices);
 
 % Simplify Polyshape
-newObstacle = convhull(newObstacle);
+% newObstacle = convhull(newObstacle);
 
 % Create new Polybuffer
 newBuffer = polybuffer(newObstacle, 0.5, "JointType", "miter");

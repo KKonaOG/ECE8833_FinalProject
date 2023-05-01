@@ -16,12 +16,14 @@
 %     recommended as the system is intended to run with a lower bound of zero.
 %     Non-zero use cases have not been tested.<br><br></p>
 map = figure();
-title("Map 1: Low Count, Low Complexity Obstacles")
+map_title = "Map 1: Low Count, Low Complexity Obstacles";
+title(map_title)
 map_size = 16;
 axis ([0 map_size 0 map_size]);
-yticks(0:2:map_size);
-xticks(0:2:map_size);
+yticks(0:1:map_size);
+xticks(0:1:map_size);
 axis square;
+grid on;
 hold on;
 
 % <h2>Create Map Waypoints (See:&nbsp;<a
@@ -43,12 +45,12 @@ hold on;
 %     singular set of X,Y coordinates. As an example, if I wanted a waypoint on
 %     the point 10, 4 then the waypoint would look like [10 4].</p>
 % <p>&nbsp;</p>
-map_waypoints = CreateWaypoint([], [4 14]);
-map_waypoints = CreateWaypoint(map_waypoints, [13 12]);
+map_waypoints = CreateWaypoint([], [1 1]);
+map_waypoints = CreateWaypoint(map_waypoints, [1 15]);
 map_waypoints = CreateWaypoint(map_waypoints, [8 4]);
-map_waypoints = CreateWaypoint(map_waypoints, [15 5]);
-map_waypoints = CreateWaypoint(map_waypoints, [13 4]);
-map_waypoints = CreateWaypoint(map_waypoints, [4 3]);
+map_waypoints = CreateWaypoint(map_waypoints, [7 12]);
+map_waypoints = CreateWaypoint(map_waypoints, [15 15]);
+map_waypoints = CreateWaypoint(map_waypoints, [15 1]);
 
 % <h2>Create Map Obstacles (See:&nbsp;<a
 %         href="src/Maps/Helpers/CreateObstacle.m">CreateObstacle.m</a>)</h2>
@@ -74,11 +76,16 @@ map_waypoints = CreateWaypoint(map_waypoints, [4 3]);
 %     of the code below obstacle_buffers)<br>Obstacle Vertices is a column array
 %     with X values in column 1 and Y values in column 2</p>
 % <p>&nbsp;</p>
-[map_obstacles, obstacle_buffers] = CreateObstacle([], [], [1 8; 1 10; 7 10; 7 8;]);
-[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers, [9 8; 9 10; 15 10; 15 8;]);
+[map_obstacles, obstacle_buffers] = CreateObstacle([], [],  [2 8; 2 16; 4 16; 4 8;]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers,  [1 3; 1 6; 4 6; 4 3;]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers,  [5 1; 5 2; 9 2; 9 1;]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers,  [7 6; 7 10; 9 10; 9 6;]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers,  [8 13; 8 16; 9 16; 9 13;]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers,  [11 0; 11 8; 13 8; 13 0;]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers,  [12 11; 12 14; 15 14; 15 11;]);
 
 % <h2>Plot Configuration onto the Map Figure</h2>
 plot(map_waypoints(:,1), map_waypoints(:,2), "o");
-plot(map_obstacles);
-plot(obstacle_buffers);
+plot(map_obstacles, "FaceColor", "Black", "FaceAlpha", 1);
+%plot(obstacle_buffers, "FaceColor", "Black");
 grid on;
