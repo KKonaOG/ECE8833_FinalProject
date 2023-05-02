@@ -11,7 +11,7 @@ newObstacle = polyshape(inVertices);
 % newObstacle = convhull(newObstacle);
 
 % Create new Polybuffer
-newBuffer = polybuffer(newObstacle, 0.5, "JointType", "miter");
+newBuffer = polybuffer(newObstacle, 0.25, "JointType", "miter");
 
 
 % Merge into Array

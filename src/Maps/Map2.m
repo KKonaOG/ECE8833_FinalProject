@@ -76,18 +76,18 @@ map_waypoints = CreateWaypoint(map_waypoints, [15 1]);
 %     of the code below obstacle_buffers)<br>Obstacle Vertices is a column array
 %     with X values in column 1 and Y values in column 2</p>
 % <p>&nbsp;</p>
-[map_obstacles, ~] = CreateObstacle([], [], [0 12; 0 14; 4 14; 4 12]);
-[map_obstacles, ~] = CreateObstacle(map_obstacles, [], [1 5; 1 10; 3 10; 3 5]);
-[map_obstacles, ~] = CreateObstacle(map_obstacles, [], [1 1; 1 3; 7 3; 7 1]);
-[map_obstacles, ~] = CreateObstacle(map_obstacles, [], [5 5; 5 10; 7 10; 7 5]);
-[map_obstacles, ~] = CreateObstacle(map_obstacles, [], [6 11; 6 16; 8 16; 8 11]);
-[map_obstacles, ~] = CreateObstacle(map_obstacles, [], [9 10; 9 13; 14 13; 14 10]);
-[map_obstacles, ~] = CreateObstacle(map_obstacles, [], [15 13; 15 16; 16 16; 16 13]);
-[map_obstacles, ~] = CreateObstacle(map_obstacles, [], [9 2; 9 7; 12 7; 12 2]);
-[map_obstacles, ~] = CreateObstacle(map_obstacles, [], [14 2; 14 8; 16 8; 16 2]);
+[map_obstacles, obstacle_buffers] = CreateObstacle([], [], [0 12; 0 14; 4 14; 4 12]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers, [1 5; 1 10; 3 10; 3 5]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers, [1 1; 1 3; 7 3; 7 1]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers, [5 5; 5 10; 7 10; 7 5]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers, [6 11; 6 16; 8 16; 8 11]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers, [9 10; 9 13; 14 13; 14 10]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers, [15 13; 15 16; 16 16; 16 13]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers, [9 2; 9 7; 12 7; 12 2]);
+[map_obstacles, obstacle_buffers] = CreateObstacle(map_obstacles, obstacle_buffers, [14 2; 14 8; 16 8; 16 2]);
 
 % <h2>Plot Configuration onto the Map Figure</h2>
 plot(map_waypoints(:,1), map_waypoints(:,2), "o");
 plot(map_obstacles, "FaceColor", "Black", "FaceAlpha", 1);
-%plot(obstacle_buffers, "FaceColor", "Black");
+plot(obstacle_buffers);
 grid on;

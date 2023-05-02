@@ -87,5 +87,5 @@ map_waypoints = CreateWaypoint(map_waypoints, [15 1]);
 % <h2>Plot Configuration onto the Map Figure</h2>
 plot(map_waypoints(:,1), map_waypoints(:,2), "o");
 plot(map_obstacles, "FaceColor", "Black", "FaceAlpha", 1);
-%plot(obstacle_buffers, "FaceColor", "Black");
+plot(obstacle_buffers);
 grid on;

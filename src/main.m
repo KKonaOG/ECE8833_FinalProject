@@ -1,6 +1,6 @@
-clc
-clear all
-close all
+clc;
+clear;
+close all;
 % <h1>Main.m</h1>
 % <p>Main.m is responsible for handling the code-flow for the entire simulation.
 %     This process is broken down into stages where each stage, more or less,
@@ -162,10 +162,10 @@ if (doPriorityOverride)
 end
 
 %% Digital Twin - Obstacle Override
-doObstacleOverride = true;
+doObstacleOverride = false;
 hiddenObstaclePoly = [5 4; 5 6; 6 6; 6 4;];
 if (doObstacleOverride)
-    digitalTwinObst = CreateObstacle(map_obstacles, [], hiddenObstaclePoly);
+    [digitalTwinObst, digitalTwinObstBuffer] = CreateObstacle(map_obstacles, obstacle_buffers, hiddenObstaclePoly);
     plot(digitalTwinObst, "FaceColor", "k", "FaceAlpha",1);
 end
 
@@ -212,7 +212,7 @@ route_solutions = struct(); % This pre-allocates an array with the number of rou
 obstacle_route_solutions = struct();
 colors = hsv(height(optimal_route)-1);
 for i=1:height(optimal_route)-1
-    [route, route_calculation_time] = graft_rrtstar(map_waypoints(optimal_route(i), :), map_waypoints(optimal_route(i+1), :), map_size, map_obstacles, 2, 1, 10000);
+    [route, route_calculation_time] = graft_rrtstar(map_waypoints(optimal_route(i), :), map_waypoints(optimal_route(i+1), :), map_size, obstacle_buffers, 2, 1, 10000);
     solution_time = solution_time + route_calculation_time;
     route_solutions(i).data = route;
     route_solutions(i).recalculated = false;
@@ -234,7 +234,7 @@ end
 if (doPriorityOverride)
     priority_route_solutions = struct();
     for i=1:height(priorityRoute)-1
-        [prio_route, prio_route_calculation_time] = graft_rrtstar(map_waypoints(priorityRoute(i), :), map_waypoints(priorityRoute(i+1), :), map_size, map_obstacles, 2, 1, 10000);
+        [prio_route, prio_route_calculation_time] = graft_rrtstar(map_waypoints(priorityRoute(i), :), map_waypoints(priorityRoute(i+1), :), map_size, obstacle_buffers, 2, 1, 10000);
         solution_time = solution_time + prio_route_calculation_time;
         priority_route_solutions(i).data = prio_route;
     end
@@ -258,7 +258,6 @@ for i=1:height(optimal_route)-1
         line(solutionPath(:, 1), solutionPath(:, 2), "Color", "r", "LineStyle", "-")
         solutionPath = obstacle_route_solutions(i).data;
         line(solutionPath(:, 1), solutionPath(:, 2), "Color", "g", "LineStyle", "--")
-        disp("Alterations");
     else
         line(solutionPath(:, 1), solutionPath(:, 2), "Color", "g", "LineStyle", "-")
     end
@@ -267,7 +266,7 @@ end
 disp("Produced Navigable Route in " + solution_time + " seconds")
 
 
-% <h2>Stage 4: <a href="../README.cchtml#h_330493934706951681190786455">Navigate
-%         along the Path while Localizing and Mapping Terrain</a></h2>
-% <p>[TODO]</p>
-% <p>&nbsp;</p>
+for i=1:height(optimal_route)-1
+    VFHOnPath(route_solutions(i).data, map_obstacles, map);
+end
+
