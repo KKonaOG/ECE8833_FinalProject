@@ -25,7 +25,7 @@ transitionWaypoint = [1 15];
 priorityWaypoint = [15 1];
 
 % Digital Twin - Obstacle Override
-doObstacleOverride = true;
+doObstacleOverride = false;
 hiddenObstaclePolygon = [5 3; 5 6; 6 6; 6 3;];
 
 %% Stage 1: Solve Travelling Salesman Problem (Self-Organizing Maps)
