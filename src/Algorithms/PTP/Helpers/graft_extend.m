@@ -11,6 +11,9 @@ faildcount =0;
 
 
 while faildcount <= static_param_data(1,3)
+
+    % Sampling Type is handled based off the currently missing portions of
+    % the tree determined by donytic_param_data as a set of states
     if  ~donytic_param_data(1,3) && ~donytic_param_data(1,4)
         if  rand < 0.5
             sample = RandomPoint(0, map);
@@ -36,23 +39,32 @@ while faildcount <= static_param_data(1,3)
         end
     end
 
+    % Find closest point in graft tree to sample point
     [~,I] = min(in_distance(GraftTree(:,1:2),sample),[],1);
 
+    % We now know the closest node in the graft tree
     closestNode = GraftTree(I(1), 1:2);
 
+    % Point the growth direction twoards the newPoint
     theta = atan2(sample(1)-closestNode(1),sample(2)-closestNode(2));
 
+    % Generate Graft Tree point from found trajectory (remember this is bound
+    % by epsilon)  
     newPoint = double(closestNode(1:2) + static_param_data(1,1) * [sin(theta)  cos(theta)]);
 
+    % If it's not obstacle free, we skip this iteration and move on
     if ~ObstacleFree(closestNode(1:2),newPoint,map,obstacles)
         faildcount = faildcount+1;
         continue;
     end
 
+    % Grab's the closest point in entire Start Tree by index to the new
+    % point
     [~,Index_main] = min(in_distance(RRTree_main(:,1:2),newPoint),[],1);
     %    check  two tree  whether link in the map
     %    first  judge is for the  ahead
     %    the second judge is for the behind t
+   % This is intended to connect to the two trees (Graft and Start)
     if distanceCost(RRTree_main(Index_main(1),1:2),newPoint)<static_param_data(1,2) && ObstacleFree(RRTree_main(Index_main(1),1:2),newPoint,map, obstacles)
         donytic_param_data(1,2) = false;
         donytic_param_data(1,3) = true;
@@ -64,10 +76,14 @@ while faildcount <= static_param_data(1,3)
         static_param_data(3,4) = I(1);
         break;
     end
+
+    % Grab's the closest point in entire Goal Tree by index to the new
+    % point
     [~,Index_goal] = min(in_distance(RRTree_goal(:,1:2),newPoint),[],1);
     %    check  two tree  whether link in the map
     %    first  judge is for the  ahead
     %    the second judge is for the behind t
+    % This is intended to connect to the two trees (Graft and Goal)
     if distanceCost(RRTree_goal(Index_goal(1),1:2),newPoint)<static_param_data(1,2) && ObstacleFree(RRTree_goal(Index_goal(1),1:2),newPoint,map, obstacles)
         donytic_param_data(1,1) = false;
         donytic_param_data(1,4) = true;
@@ -82,6 +98,7 @@ while faildcount <= static_param_data(1,3)
 
     [~,Index_graft] =  min(in_distance(GraftTree(:,1:2),newPoint),[], 1);
 
+    % We continue the loop if we are not within the distance threshold
     if  in_distance(newPoint, GraftTree(Index_graft(1),1:2)) < static_param_data(1,2)
         faildcount = faildcount+1;
         continue;

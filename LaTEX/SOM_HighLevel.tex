@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\begin{document}
+
+\begin{algorithm}
+    \caption{Modified D. Vicente SOM Algorithm for TSP}
+    \begin{algorithmic}
+        \Statex
+        \State Initialize Network Neurons with Random Values
+        \State Initialize Error Array to Track Winning Neuron Distance Errors
+        \Statex
+            \For{$i\gets1$ \textbf{to} $iterations$}
+                \State Get the Next Waypoint in Order to Train on
+                \State Find Closest Neuron to Current Waypoint (Winning Neuron)
+                \State Update Neuron Weights based off Winning Neuron
+	     \State Terminate if Learning Rate is Completely Decayed
+                \State Terminate if Active Nuerons is Completely Decayed
+	     \State $isPlatue \gets mean(errorarray_{prev} -  errorarray_{curr}) < 0.001$
+	     \If {$isPlatue$ and $mean(errorarray_{curr} < 0.001)$}
+		\State Terminate Training Early
+	     \EndIf
+                \State Update Error Array based off Neuron Distance to Waypoint
+            \EndFor
+            \State Compute Optimal Route from Network
+            \State Compute Route Distance
+            \State \Return $network$, $optimalRoute$, $routeDistance$
+        \Statex
+    \end{algorithmic}
+\end{algorithm}
+
+\end{document}

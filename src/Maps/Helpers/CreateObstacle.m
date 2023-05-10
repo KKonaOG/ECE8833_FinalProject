@@ -1,4 +1,4 @@
-function [outObstacles, outBuffers] = CreateObstacle(inObstacles, inBuffers, inVertices)
+function [outObstacles, occupancy_map] = CreateObstacle(inObstacles, inVertices, occupancy_map)
 %CREATEOBSTACLE Create a new obstacle which will be inserted into a
 %previously existing obstacle array.
 %   Takes in a map's obstacle array and merges in a new polyshape given the
@@ -7,15 +7,7 @@ function [outObstacles, outBuffers] = CreateObstacle(inObstacles, inBuffers, inV
 % Create new Polyshape
 newObstacle = polyshape(inVertices);
 
-% Simplify Polyshape
-% newObstacle = convhull(newObstacle);
-
-% Create new Polybuffer
-newBuffer = polybuffer(newObstacle, 0.25, "JointType", "miter");
-
-
 % Merge into Array
 outObstacles = [inObstacles; newObstacle];
-outBuffers = [inBuffers; newBuffer];
 end
 

@@ -10,31 +10,39 @@ function     new_path = re_path(RRTree_main,GraftTree,RRTree_goal,static_param_d
 	graft_tree_ahead=[];
 	graft_tree_behind = [];
 	goal_tree=[];
+
+    % If errtree_found is true generate the tree path using the main and
+    % goal trees based off the prev_ahead and prev_graft_behind point
 	if donytic_param_data(5),
 		prev = static_param_data(3,3);
-		main_tree = [static_param_data(5,1) static_param_data(5,2)];
+		main_tree = [static_param_data(5,1) static_param_data(5,2)]; % Connection Point
 		while prev > 0,
-			main_tree = [RRTree_main(prev,1:2);main_tree];
+			main_tree = [RRTree_main(prev,1:2);main_tree]; % Grab path to Connection Point
 			prev = RRTree_main(prev,3);
 		end
 		prev =static_param_data(4,4);
-		goal_tree = [static_param_data(5,1) static_param_data(5,2)];
+		goal_tree = [static_param_data(5,1) static_param_data(5,2)]; % Connection Point
 		while prev > 0,
-			goal_tree = [goal_tree;RRTree_goal(prev,1:2)];
+			goal_tree = [goal_tree;RRTree_goal(prev,1:2)]; % Grab path to connection point
 			prev = RRTree_goal(prev,3);
 		end	
-		main_tree(end,:)=[];
-		new_path=[main_tree;goal_tree ];
+		main_tree(end,:)=[]; % we don't want the end since it is just connection point and that is already in goal tree
+		new_path=[main_tree;goal_tree ]; % Combine the paths
 		
-	else
+    else
+        % If errtree_found is not true then the tree path is generated from
+        % the connect points
 		prev = static_param_data(3,3);
 		main_tree =[static_param_data(2,3) static_param_data(2,4)];
-			
+	    
+        % Recursively build_main tree from prev to get path from connect
+        % point
 		while prev > 0,
 			main_tree = [RRTree_main(prev,1:2);main_tree];
 			prev = RRTree_main(prev,3);
 		end
 
+        % Repeat the same process for the goal tree
 		prev = static_param_data(4,3);
 		goal_tree =[static_param_data(5,3) static_param_data(5,4)];
 		while prev > 0,
@@ -42,6 +50,10 @@ function     new_path = re_path(RRTree_main,GraftTree,RRTree_goal,static_param_d
 			prev = RRTree_goal(prev,3);		
 		end
 
+
+        % Repeat the same process for the graft tree (we have to do it in
+        % two places though since it is connected on both sides of the
+        % tree)
 		graft_path_ahead =  [static_param_data(2,3) static_param_data(2,4)];
 		prev =  static_param_data(3,4);
 		
@@ -56,14 +68,17 @@ function     new_path = re_path(RRTree_main,GraftTree,RRTree_goal,static_param_d
 		while  	prev  >0,
 			graft_path_behind = [GraftTree(prev,1:2);graft_path_behind];
 			prev = GraftTree(prev,3);
-		end
+        end
+
+        % Connect Start Tree, Graft Tree, and Goal Tree form one full
+        % uniform path
 
 		main_tree(end,:)=[];
+        % Remove connect points on graft tree as the Start and Goal trees
+        % will contain those for us
 		graft_path_ahead(end,:)=[];	
 		graft_path_behind(end,:)=[];
 		new_path = [main_tree; graft_path_ahead;graft_path_behind;goal_tree];
 
 			
-	end
-
-	%88130339
+    end

@@ -1,4 +1,4 @@
-function [containsValid, validPoints] = CheckCollision(points, obstacles, map_size)
+function [containsValid, validPoints] = CheckCollision(points, occupancy_grid, map_size)
 % CheckCollision The purpose function is dual purpose. It is used within
 % pre-processing to determine what points (if any) in the array of points
 % are valid. The returns are containsValid and validPoints. containsValid
@@ -23,11 +23,17 @@ points(invalidMapBoundsY, :) = [];
 invalidMapBoundsY = points(:, 2) <= 0;
 points(invalidMapBoundsY, :) = [];
 
+% Remove Points within Obstacles
+invalidPoints = zeros(height(points), 1);
+for i=1:height(points)
+    pointX = floor(points(i, 1) + 1);
+    pointY = map_size - floor(points(i, 2));
 
-for i=1:height(obstacles)
-    [inPoly] = inpolygon(points(:, 1), points(:, 2), obstacles(i).Vertices(:, 1), obstacles(i).Vertices(:, 2));
-    points(inPoly, :) = [];
+    if (occupancy_grid(pointY, pointX) == 1)
+        invalidPoints(i) = 1;
+    end
 end
+points = points(~invalidPoints, :);
 
 containsValid = height(points)>=1;
 validPoints = points;

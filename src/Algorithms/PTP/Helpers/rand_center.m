@@ -1,4 +1,4 @@
-function [point] = rand_center(qsource, qgoal, map_size, obstacles)
+function [point] = rand_center(qsource, qgoal, map_size, occupancy_grid)
 %GETTREE Returns the Tgraft tree discussed in the Graft-RRT algorithm (Map
 % Size is used as a resolution constraint on generating center point)
 
@@ -34,8 +34,8 @@ straightLineFromEnd = [straightLineX', straightLineY'];
 
 
 % Remove Points within an Obstacle
-[~, validStraightLineFromStart] = CheckCollision(straightLineFromStart, obstacles, map_size);
-[~, validStraightLineFromEnd] = CheckCollision(straightLineFromEnd, obstacles, map_size);
+[~, validStraightLineFromStart] = CheckCollision(straightLineFromStart, occupancy_grid, map_size);
+[~, validStraightLineFromEnd] = CheckCollision(straightLineFromEnd, occupancy_grid, map_size);
 
 
 % Calculate 25% of the number of total valid points for each segment and
@@ -59,6 +59,11 @@ end
 
 % Chooses a random point from the calculated portions of the segments and
 % uses that as the root node of the graft tree
-sampleSet = [centerStartPoints;centerEndPoints];
-point = sampleSet(randi(height(sampleSet), 1), :);
+try
+    sampleSet = [centerStartPoints;centerEndPoints];
+    point = sampleSet(randi(height(sampleSet), 1), :);
+catch
+    disp("Sample Set issue");
 end
+end
+
